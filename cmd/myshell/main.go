@@ -16,6 +16,7 @@ func isBuiltIn(value string) bool {
 		"exit",
 		"echo",
 		"type",
+		"pwd",
 	}
 
 	// iterating through the list of known built-in commands
