@@ -42,6 +42,7 @@ func commandExistsInPath(env string, arg string) (bool, string) {
 	return false, ""
 }
 
+// exits the code with the mentioned <exitCode>
 func doExit(exitCode string, message string) {
 	code, err := strconv.Atoi(exitCode)
 	if err != nil {
@@ -112,6 +113,15 @@ func main() {
 				fmt.Fprintf(os.Stdout ,"%s\n", fp)
 			}
 
+		case "cd":
+			if len(command) > 1 {
+				err := os.Chdir(command[1])
+				if err != nil {
+					fmt.Fprintf(os.Stdout, "cd: %s: No such file or directory\n", command[1])
+				}
+			} else {
+				fmt.Fprintf(os.Stdout, "cd: : No such file or directory\n")
+			}
 		default:
 			cmdExec := exec.Command(command[0], command[1:]...)
 			cmdExec.Stderr = os.Stderr
