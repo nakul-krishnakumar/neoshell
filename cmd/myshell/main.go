@@ -4,10 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
-
-// Ensures gofmt doesn't remove the "fmt" import in stage 1 (feel free to remove this!)
-var _ = fmt.Fprint
 
 func main() {
 	for i:=0; ;i++ {
@@ -20,10 +18,16 @@ func main() {
 			os.Exit(1)
 		}
 
+		// exit 0 -> command to exit the shell
 		if command == "exit 0\n" {
 			os.Exit(0)
 		}
-		
-		fmt.Println(command[:len(command)-1] + ": command not found")
+
+		if strings.HasPrefix(command, "echo") {
+			fmt.Println(strings.TrimLeft(command[4:len(command)-1], " "))
+		} else {
+			fmt.Println(command[:len(command)-1] + ": command not found")
+		}
+
 	}
 }
