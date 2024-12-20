@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -27,21 +28,40 @@ func isBuiltIn(value string) bool {
 	return false
 }
 
-func commandExistsInPath(env string, arg string) {
+// checks if the mentioned <arg> is found anywhere in any dir
+func commandExistsInPath(env string, arg string) (bool, string) {
 	paths := strings.Split(env, ":")
 
 	for _, path := range paths {
 		fp := filepath.Join(path, arg)
 		if _, err := os.Stat(fp); err == nil {
-			fmt.Fprintf(os.Stdout, "%s is %s\n", arg, fp)
-			return 
+			return true, fp 
 		} 
 	}
-	fmt.Fprintf(os.Stdout, "%s: not found\n", arg)
-	return
+	return false, ""
+}
+
+func doExit(exitCode string, message string) {
+	code, err := strconv.Atoi(exitCode)
+	if err != nil {
+		fmt.Fprintf(os.Stdout, "%s: command not found\n", message)
+		os.Exit(1)
+	}
+	os.Exit(code)
 }
 
 func main() {
+// 	fmt.Printf(`
+//                                     $$\               $$\$$\ 
+//                                     $$ |              $$ $$ |
+// $$$$$$$\  $$$$$$\  $$$$$$\  $$$$$$$\$$$$$$$\  $$$$$$\ $$ $$ |
+// $$  __$$\$$  __$$\$$  __$$\$$  _____$$  __$$\$$  __$$\$$ $$ |
+// $$ |  $$ $$$$$$$$ $$ /  $$ \$$$$$$\ $$ |  $$ $$$$$$$$ $$ $$ |
+// $$ |  $$ $$   ____$$ |  $$ |\____$$\$$ |  $$ $$   ____$$ $$ |
+// $$ |  $$ \$$$$$$$\\$$$$$$  $$$$$$$  $$ |  $$ \$$$$$$$\$$ $$ |
+// \__|  \__|\_______|\______/\_______/\__|  \__|\_______\__\__|
+	
+// `)
 	for {
 		fmt.Fprint(os.Stdout, "$ ")
 		
@@ -55,20 +75,13 @@ func main() {
 		message = strings.TrimSpace(message)
 
 		command := strings.Split(message, " ")
-
 		switch command[0] {
 		case "exit":
 			// exit <exit_code> -> exits with <exit_code>
 			// if <exit_code> is not mentioned, shell asks to mention it
 
 			if len(command) > 1 {
-				code, err := strconv.Atoi(command[1])
-	
-				if err != nil {
-					fmt.Fprintf(os.Stdout, "%s: command not found\n", message)
-					os.Exit(1)
-				}
-				os.Exit(code)
+				doExit(command[1], message)
 			} else {
 				fmt.Fprintf(os.Stdout, "Mention exit code\n")
 			}
@@ -84,11 +97,36 @@ func main() {
 			if isBuiltIn(value) {
 				fmt.Fprintf(os.Stdout, "%s is a shell builtin\n", value)
 			} else {
-				commandExistsInPath(os.Getenv("PATH"), value)
+				exists, fp := commandExistsInPath(os.Getenv("PATH"), value)
+				if exists {
+					fmt.Fprintf(os.Stdout, "%s is %s\n", value, fp)
+				} else {
+					fmt.Fprintf(os.Stdout, "%s: not found\n", value)
+				}
 			}
 		default:
-			fmt.Fprintf(os.Stdout, "%s: command not found\n", message)
-		}
+			cmdExec := exec.Command(command[0], command[1:]...)
+			cmdExec.Stderr = os.Stderr
+			cmdExec.Stdout = os.Stdout
 
+			err := cmdExec.Run()
+			if err != nil {
+				fmt.Printf("%s: command not found\n", command[0])
+			}
+		}
 	}
 }
+
+/* 
+
+                                    $$\               $$\$$\ 
+                                    $$ |              $$ $$ |
+$$$$$$$\  $$$$$$\  $$$$$$\  $$$$$$$\$$$$$$$\  $$$$$$\ $$ $$ |
+$$  __$$\$$  __$$\$$  __$$\$$  _____$$  __$$\$$  __$$\$$ $$ |
+$$ |  $$ $$$$$$$$ $$ /  $$ \$$$$$$\ $$ |  $$ $$$$$$$$ $$ $$ |
+$$ |  $$ $$   ____$$ |  $$ |\____$$\$$ |  $$ $$   ____$$ $$ |
+$$ |  $$ \$$$$$$$\\$$$$$$  $$$$$$$  $$ |  $$ \$$$$$$$\$$ $$ |
+\__|  \__|\_______|\______/\_______/\__|  \__|\_______\__\__|
+
+
+*/
