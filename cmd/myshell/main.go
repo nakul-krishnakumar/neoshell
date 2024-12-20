@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -17,13 +18,27 @@ func isBuiltIn(value string) bool {
 	}
 
 	// iterating through the list of known built-in commands
-	for i := range commands {
-		if commands[i] == value {
+	for _, command := range commands {
+		if command == value {
 			return true
 		}
 	}
 
 	return false
+}
+
+func commandExistsInPath(env string, arg string) {
+	paths := strings.Split(env, ":")
+
+	for _, path := range paths {
+		fp := filepath.Join(path, arg)
+		if _, err := os.Stat(fp); err == nil {
+			fmt.Fprintf(os.Stdout, "%s is %s\n", arg, fp)
+			return 
+		} 
+	}
+	fmt.Fprintf(os.Stdout, "%s: not found\n", arg)
+	return
 }
 
 func main() {
@@ -43,6 +58,9 @@ func main() {
 
 		switch command[0] {
 		case "exit":
+			// exit <exit_code> -> exits with <exit_code>
+			// if <exit_code> is not mentioned, shell asks to mention it
+
 			if len(command) > 1 {
 				code, err := strconv.Atoi(command[1])
 	
@@ -56,14 +74,17 @@ func main() {
 			}
 		
 		case "echo":
+			// echo <message> -> prints the <message>
 			fmt.Fprintf(os.Stdout, "%s\n", strings.Join(command[1:], " "))
 		
 		case "type":
+			// type <command> -> checks if <command> is built-in or invalid
+
 			value := strings.Join(command[1:], " ")
 			if isBuiltIn(value) {
 				fmt.Fprintf(os.Stdout, "%s is a shell builtin\n", value)
 			} else {
-				fmt.Fprintf(os.Stdout, "%s: not found\n", value)
+				commandExistsInPath(os.Getenv("PATH"), value)
 			}
 		default:
 			fmt.Fprintf(os.Stdout, "%s: command not found\n", message)
