@@ -120,7 +120,7 @@ func main() {
 				if command[1] == "~" {
 					path, err = os.UserHomeDir()
 					if err != nil {
-						fmt.Printf(os.Stdout, "Error: %s", err)
+						fmt.Fprintf(os.Stdout, "Error: %s", err)
 					}
 				} 
 
