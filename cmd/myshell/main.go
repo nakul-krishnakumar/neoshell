@@ -104,6 +104,13 @@ func main() {
 					fmt.Fprintf(os.Stdout, "%s: not found\n", value)
 				}
 			}
+
+		case "pwd":
+			fp, err := os.Getwd()
+			if err == nil {
+				fmt.Fprintf(os.Stdout ,"%s\n", fp)
+			}
+
 		default:
 			cmdExec := exec.Command(command[0], command[1:]...)
 			cmdExec.Stderr = os.Stderr
