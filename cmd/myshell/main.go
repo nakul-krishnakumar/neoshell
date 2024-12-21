@@ -75,28 +75,42 @@ func main() {
 			os.Exit(1)
 		}
 
+		// message -> user input ( command + arguments )
 		message = strings.TrimSpace(message)
+		messageArray := strings.Split(message, " ")
+		fmt.Println("msg", messageArray)
 
-		command := strings.Split(message, " ")
-		switch command[0] {
+		command := messageArray[0]
+		argString := strings.Join(messageArray[1:], " ")
+		fmt.Println("arg", argString)
+
+		if (strings.HasPrefix(argString, "'") &&  strings.HasSuffix(argString, "'") ) || 
+			(strings.HasPrefix(argString, `"`) &&  strings.HasSuffix(argString, `"`) ) {
+			argString = strings.Trim(argString, "'")
+		}
+		args := strings.Split(argString, " ")
+
+		switch command {
 		case "exit":
 			// exit <exit_code> -> exits with <exit_code>
 			// if <exit_code> is not mentioned, shell asks to mention it
 
 			if len(command) > 1 {
-				doExit(command[1], message)
+				// args[0] -> exitCode string
+				// message -> message string ( full user input to print when err occurs )
+				doExit(args[0], message) 
 			} else {
 				fmt.Fprintf(os.Stdout, "Mention exit code\n")
 			}
 		
 		case "echo":
 			// echo <message> -> prints the <message>
-			fmt.Fprintf(os.Stdout, "%s\n", strings.Join(command[1:], " "))
+			fmt.Fprintf(os.Stdout, "%s\n", strings.Join(args, " "))
 		
 		case "type":
 			// type <command> -> checks if <command> is built-in or invalid
 
-			value := strings.Join(command[1:], " ")
+			value := strings.Join(args, " ")
 			if isBuiltIn(value) {
 				fmt.Fprintf(os.Stdout, "%s is a shell builtin\n", value)
 			} else {
@@ -109,15 +123,18 @@ func main() {
 			}
 
 		case "pwd":
+			// pwd -> prints the PRESENT WORKING DIRECTORY
 			fp, err := os.Getwd()
 			if err == nil {
 				fmt.Fprintf(os.Stdout ,"%s\n", fp)
 			}
 
 		case "cd":
+			// cd <location> -> navigates to the given <location>
+
 			if len(command) > 1 {
-				path := command[1]
-				if command[1] == "~" {
+				path := args[0]
+				if path == "~" {
 					path, err = os.UserHomeDir()
 					if err != nil {
 						fmt.Fprintf(os.Stdout, "Error: %s", err)
@@ -126,35 +143,22 @@ func main() {
 
 				err := os.Chdir(path)
 				if err != nil {
-					fmt.Fprintf(os.Stdout, "cd: %s: No such file or directory\n", command[1])
+					fmt.Fprintf(os.Stdout, "cd: %s: No such file or directory\n", args[1])
 				
 				}
 			} else {
 				fmt.Fprintf(os.Stdout, "cd: : No such file or directory\n")
 			}
 		default:
-			cmdExec := exec.Command(command[0], command[1:]...)
+			// executes default command line's commands
+			cmdExec := exec.Command(command, args...)
 			cmdExec.Stderr = os.Stderr
 			cmdExec.Stdout = os.Stdout
 
 			err := cmdExec.Run()
 			if err != nil {
-				fmt.Printf("%s: command not found\n", command[0])
+				fmt.Printf("%s: command not found\n", command)
 			}
 		}
 	}
 }
-
-/* 
-
-                                    $$\               $$\$$\ 
-                                    $$ |              $$ $$ |
-$$$$$$$\  $$$$$$\  $$$$$$\  $$$$$$$\$$$$$$$\  $$$$$$\ $$ $$ |
-$$  __$$\$$  __$$\$$  __$$\$$  _____$$  __$$\$$  __$$\$$ $$ |
-$$ |  $$ $$$$$$$$ $$ /  $$ \$$$$$$\ $$ |  $$ $$$$$$$$ $$ $$ |
-$$ |  $$ $$   ____$$ |  $$ |\____$$\$$ |  $$ $$   ____$$ $$ |
-$$ |  $$ \$$$$$$$\\$$$$$$  $$$$$$$  $$ |  $$ \$$$$$$$\$$ $$ |
-\__|  \__|\_______|\______/\_______/\__|  \__|\_______\__\__|
-
-
-*/
