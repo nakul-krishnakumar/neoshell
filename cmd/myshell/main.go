@@ -78,15 +78,15 @@ func main() {
 		// message -> user input ( command + arguments )
 		message = strings.TrimSpace(message)
 		messageArray := strings.Split(message, " ")
-		fmt.Println("msg", messageArray)
 
 		command := messageArray[0]
 		argString := strings.Join(messageArray[1:], " ")
-		fmt.Println("arg", argString)
 
 		if (strings.HasPrefix(argString, "'") &&  strings.HasSuffix(argString, "'") ) || 
 			(strings.HasPrefix(argString, `"`) &&  strings.HasSuffix(argString, `"`) ) {
 			argString = strings.Trim(argString, "'")
+		} else {
+			argString = strings.Join(strings.Fields(argString), " ")
 		}
 		args := strings.Split(argString, " ")
 
@@ -132,7 +132,7 @@ func main() {
 		case "cd":
 			// cd <location> -> navigates to the given <location>
 
-			if len(command) > 1 {
+			if len(args) >= 1 {
 				path := args[0]
 				if path == "~" {
 					path, err = os.UserHomeDir()
@@ -143,7 +143,7 @@ func main() {
 
 				err := os.Chdir(path)
 				if err != nil {
-					fmt.Fprintf(os.Stdout, "cd: %s: No such file or directory\n", args[1])
+					fmt.Fprintf(os.Stdout, "cd: %s: No such file or directory\n", args[0])
 				
 				}
 			} else {
