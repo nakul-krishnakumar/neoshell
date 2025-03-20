@@ -54,17 +54,18 @@ func doExit(exitCode string, message string) {
 }
 
 func main() {
-// 	fmt.Printf(`
-//                                     $$\               $$\$$\ 
-//                                     $$ |              $$ $$ |
-// $$$$$$$\  $$$$$$\  $$$$$$\  $$$$$$$\$$$$$$$\  $$$$$$\ $$ $$ |
-// $$  __$$\$$  __$$\$$  __$$\$$  _____$$  __$$\$$  __$$\$$ $$ |
-// $$ |  $$ $$$$$$$$ $$ /  $$ \$$$$$$\ $$ |  $$ $$$$$$$$ $$ $$ |
-// $$ |  $$ $$   ____$$ |  $$ |\____$$\$$ |  $$ $$   ____$$ $$ |
-// $$ |  $$ \$$$$$$$\\$$$$$$  $$$$$$$  $$ |  $$ \$$$$$$$\$$ $$ |
-// \__|  \__|\_______|\______/\_______/\__|  \__|\_______\__\__|
-	
-// `)
+	fmt.Printf(`
+										$$\               $$\$$\ 
+										$$ |              $$ $$ |
+	$$$$$$$\  $$$$$$\  $$$$$$\  $$$$$$$\$$$$$$$\  $$$$$$\ $$ $$ |
+	$$  __$$\$$  __$$\$$  __$$\$$  _____$$  __$$\$$  __$$\$$ $$ |
+	$$ |  $$ $$$$$$$$ $$ /  $$ \$$$$$$\ $$ |  $$ $$$$$$$$ $$ $$ |
+	$$ |  $$ $$   ____$$ |  $$ |\____$$\$$ |  $$ $$   ____$$ $$ |
+	$$ |  $$ \$$$$$$$\\$$$$$$  $$$$$$$  $$ |  $$ \$$$$$$$\$$ $$ |
+	\__|  \__|\_______|\______/\_______/\__|  \__|\_______\__\__|
+		
+	`)
+
 	for {
 		fmt.Fprint(os.Stdout, "$ ")
 		
@@ -82,21 +83,29 @@ func main() {
 		command := messageArray[0]
 		args := messageArray[1:]
 
+
+		// TODO FIX QUOTING SUPPORT
+		// I only though about quotes being on starting and ending, 
+		// but didnt think about the possibility of multiple quoted strings
+		// like -> echo "hello   " "world"
 		if len(args) > 0 {
-			if strings.HasPrefix(args[0], `'`) && strings.HasSuffix(args[len(args)-1], `'`) ||
-				strings.HasPrefix(args[0], `"`) && strings.HasSuffix(args[len(args)-1], `"`) {
-					args[0] = args[0][1:]
-					var found bool
-					args[len(args)-1], found = strings.CutSuffix(args[len(args)-1], `'`)
-					if !found {
-						args[len(args)-1], _ = strings.CutSuffix(args[len(args)-1], `"`)
-					}
-			} else {
-				//remove whitespaces in between
-				argsArray := strings.Join(args, " ")
-				args = strings.Fields(argsArray)
+			for i, arg := range args {
+				if (strings.HasPrefix(arg, `"`) && strings.HasSuffix(arg, `""`)) ||
+					(strings.HasPrefix(arg, `'`) && strings.HasSuffix(arg, `'`)) {
+					args[i] = strings.Trim(arg, `"'`)
+				}
 			}
 		}
+			// if strings.HasPrefix(args[0], `'`) && strings.HasSuffix(args[len(args)-1], `'`) ||
+			// 	strings.HasPrefix(args[0], `"`) && strings.HasSuffix(args[len(args)-1], `"`) {
+			// 		args[0] = args[0][1:]
+			// 		var found bool
+			// 		args[len(args)-1], found = strings.CutSuffix(args[len(args)-1], `'`)
+			// 		if !found {
+			// 			args[len(args)-1], _ = strings.CutSuffix(args[len(args)-1], `"`)
+			// 		}
+			// 	} 
+			// }
 
 		switch command {
 		case "exit":
